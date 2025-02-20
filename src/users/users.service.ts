@@ -38,8 +38,15 @@ export class UsersService {
     }
     Object.assign(user, { email, password });
     await this.userRepository.save(user);
-    return { user };
+    return user;
   }
 
-  remove({}: { id: number }) {}
+  async remove({ id }: { id: number }) {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+    await this.userRepository.remove(user);
+    return user;
+  }
 }
