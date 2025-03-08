@@ -7,19 +7,24 @@ import { BadRequestException } from '@nestjs/common';
 describe('AuthService', () => {
   let authService: AuthService;
   const user = { id: 2, email: 'test2@email.com', password: '123456' } as User;
-  const user2Password =
-    'cefe4d3c878a4c2a.c8e63c2cf13ef5a72906289c0158c5fbed1ce265fdb50fcf9c23004915695ad6';
   const user2 = {
     id: 3,
     email: 'test3@email.com',
-    password: user2Password,
+    password:
+      'cefe4d3c878a4c2a.c8e63c2cf13ef5a72906289c0158c5fbed1ce265fdb50fcf9c23004915695ad6',
   } as User;
   beforeEach(async () => {
-    const fakeUsersService: Partial<UsersService> = {
-      find: ({ email }) =>
-        Promise.resolve([user, user2].filter((user) => user.email === email)),
-      create: ({ email, password }: { email: string; password: string }) => {
-        return Promise.resolve({ user: { id: 1, email, password } as User });
+    const fakeUsersService: Partial<UsersService> & { users: User[] } = {
+      users: [user, user2],
+      find({ email }: { email: string }) {
+        return Promise.resolve(
+          this.users?.filter((user) => user.email === email),
+        );
+      },
+      create({ email, password }: { email: string; password: string }) {
+        const newUser = { id: 1, email, password } as User;
+        this.users.push(newUser);
+        return Promise.resolve({ user: newUser });
       },
     };
     const module = await Test.createTestingModule({
@@ -73,10 +78,12 @@ describe('AuthService', () => {
     ).rejects.toThrow(BadRequestException);
   });
   it('will sign in user', async () => {
+    const user = { email: 'test123@email.com', password: '12345' };
+    await authService.signup(user);
     const signInUser = await authService.signin({
-      email: user2.email,
-      password: `12345`,
+      email: user.email,
+      password: user.password,
     });
-    expect(signInUser.email).toEqual(user2.email);
+    expect(signInUser.email).toEqual(user.email);
   });
 });
