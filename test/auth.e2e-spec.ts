@@ -13,7 +13,7 @@ describe('Authentication', () => {
     await app.init();
   });
   it('handles sign up request', async () => {
-    const email = 'asjdfhkjd@email.com';
+    const email = 'asjdfhkjsd@email.com';
     const res = await request(app.getHttpServer())
       .post('/auth/signup')
       .send({ email: email, password: '123456' });
